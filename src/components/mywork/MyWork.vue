@@ -1,47 +1,41 @@
 <template>
-    <v-container>
-        <h2 class="text-h4 font-weight-bold mb-6">你收藏的点子</h2>
+    <v-container class="pl-12">
+        <h2 class="text-h4 font-weight-bold mb-6">My Boards</h2>
 
         <div class="d-flex align-center justify-space-between mb-4">
-            <v-tabs v-model="selectedBoardId">
-                <v-tab v-for="board in boards" :key="board.boardId" :value="board.boardId">
-                    {{ board.boardName }}
-                </v-tab>
-            </v-tabs>
+            <template v-if="boards.length">
+                <v-tabs v-model="selectedBoardId">
+                    <v-tab v-for="board in boards" :key="board.boardId" :value="board.boardId">
+                        {{ board.boardName }}
+                    </v-tab>
+                </v-tabs>
+            </template>
+            <template v-else>
+                <v-alert type="info" variant="tonal" text style="margin-right: 24px;">
+                    You haven't create any board.
+                </v-alert>
+            </template>
 
-            <!-- 添加按钮 -->
             <v-btn icon @click="dialog = true">
                 <v-icon>mdi-plus</v-icon>
             </v-btn>
         </div>
         <PinMasonry :items="pins" @pin-click="handlePinClick" />
-        <!-- <v-window v-model="tab">
-            <v-window-item value="pins"> -->
-        <!-- Pins 内容 -->
-        <!-- <div>这里是你收藏的 Pin 图</div>
-            </v-window-item>
 
-            <v-window-item value="boards"> -->
-        <!-- Boards 内容 -->
-        <!-- <div>这里是你收藏的图板</div>
-            </v-window-item>
-        </v-window> -->
-
-        <!-- 弹窗 -->
         <v-dialog v-model="dialog" max-width="400">
             <v-card>
                 <v-card-title>
-                    <span class="text-h6">创建新图板</span>
+                    <span class="text-h6">Create New Board</span>
                 </v-card-title>
 
                 <v-card-text>
-                    <v-text-field label="图板名称" v-model="newBoardName" />
+                    <v-text-field label="Board Name" v-model="newBoardName" />
                 </v-card-text>
 
                 <v-card-actions>
                     <v-spacer />
-                    <v-btn text @click="dialog = false">取消</v-btn>
-                    <v-btn text color="primary" @click="createBoard">创建</v-btn>
+                    <v-btn text @click="dialog = false">Cancel</v-btn>
+                    <v-btn text color="primary" @click="createBoard">Create</v-btn>
                 </v-card-actions>
             </v-card>
         </v-dialog>
@@ -96,7 +90,6 @@ async function fetchPinsByBoard(boardId) {
 
 
 async function createBoard() {
-    console.log('新图板名：', newBoardName.value)
     dialog.value = false
 
     try {
@@ -123,7 +116,6 @@ onMounted(() => {
 })
 
 watch(selectedBoardId, async (newBoardId) => {
-    console.log('切换到新图板 ID:', newBoardId)
     if (newBoardId) {
         await fetchPinsByBoard(newBoardId)
     }

@@ -2,9 +2,7 @@
 <template>
     <v-container fluid class="py-8">
 
-        <!-- ===== 顶部：看板信息 ===== -->
         <v-row class="mb-8">
-            <!-- 左：标题 / 描述 / 作者 -->
             <v-col cols="12" md="8" class="d-flex align-center">
                 <div>
                     <h1 class="text-h4 font-weight-bold mb-1">
@@ -35,7 +33,6 @@
         <!-- ===== Pins Masonry ===== -->
         <PinMasonry :items="pins" />
 
-        <!-- 错误提示 -->
         <v-alert v-if="error" type="error" variant="tonal" class="mt-6" :text="error" />
         <v-dialog v-model="dialog" max-width="400">
             <v-card>
@@ -67,7 +64,6 @@ import PinMasonry from '@/components/PinMasonry.vue'
 const route = useRoute()
 const boardId = Number(route.params.id)
 
-/* ------ 看板信息 DTO ------ */
 const boardInfo = ref({
     boardId,
     title: '',
@@ -76,7 +72,6 @@ const boardInfo = ref({
     userId: 0,
 })
 
-/* ------ Pins 列表 ------ */
 const pins = ref<Array<{ pinId: number; imageUrl: string }>>([])
 const error = ref('')
 
@@ -106,7 +101,6 @@ async function fetchBoardInfo() {
     }
 }
 
-/* --- 一次性拉取所有 Pins --- */
 async function fetchPins() {
     try {
         const { data } = await axios.get('/iapi/api/pin/getPinsByBoard', {

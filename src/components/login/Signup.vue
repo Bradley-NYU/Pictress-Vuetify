@@ -26,7 +26,6 @@
                         {{ errorMessage }}
                     </v-alert>
 
-                    <!-- ✅ 登录跳转按钮 -->
                     <v-btn variant="text" color="primary" class="mt-2" block @click="goToLogin">
                         Already have an account? Login
                     </v-btn>
@@ -62,7 +61,6 @@ async function handleSignup() {
             password: password.value
         })
             
-        // 假设后端返回 user 对象
         router.push('/loginPage')
     } catch (error) {
         errorMessage.value =

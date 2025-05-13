@@ -35,7 +35,6 @@ router.isReady().then(() => {
 router.beforeEach((to, from, next) => {
   const isAuthenticated = !!localStorage.getItem("userToken");
 
-  // 允许访问登录页
   if (to.path === "/LoginPage" || to.path === "/SignupPage") {
     return next();
   }
@@ -43,13 +42,6 @@ router.beforeEach((to, from, next) => {
     return next("/LoginPage");
   }
 
-  // // 其他页面必须登录
-  // if (!isAuthenticated) {
-  //   console.log("Redirecting to login");
-  //   return next("/LoginPage");
-  // }
-
-  // 放行
   next();
 });
 

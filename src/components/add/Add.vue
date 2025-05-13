@@ -1,5 +1,5 @@
 <template>
-    <v-container fluid>
+    <v-container fluid style="padding-left: 80px;">
         <v-row>
             <!-- Left Upload Card -->
             <v-col cols="12" md="6">
@@ -19,13 +19,10 @@
             <v-col cols="12" md="6">
                 <v-text-field label="Title" v-model="title" outlined />
                 <v-textarea label="Description" v-model="description" outlined />
-                <v-select label="Board" :items="boards" v-model="selectedBoard" outlined />
+                <v-select v-model="selectedBoardId" :items="boards" item-title="boardName" item-value="boardId"
+                    label="Select a board" />
                 <v-combobox label="Tags" v-model="tags" multiple chips outlined />
-                <v-text-field label="Product Tag" v-model="productTag" outlined />
-                <v-btn text @click="showMore = !showMore">More Options</v-btn>
-                <div v-if="showMore" class="mt-2">
-                    <v-textarea label="Additional Notes" outlined />
-                </div>
+
             </v-col>
         </v-row>
     </v-container>
@@ -35,7 +32,7 @@
     </v-snackbar>
 </template>
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import COS from 'cos-js-sdk-v5'
 import axios from '@/plugins/axios'
 
@@ -43,7 +40,8 @@ const cos = ref(null)
 const file = ref(null)
 const title = ref('')
 const description = ref('')
-const boards = ['旅行', '美食', '摄影']
+const boards = ref([])
+const selectedBoardId = ref(null)
 const selectedBoard = ref('')
 const tags = ref([])
 const productTag = ref('')
@@ -96,8 +94,8 @@ async function createPin() {
         description: description.value || null,
         imageUrl: imageUrl.value, // COS 上传成功后赋值
         tags: tags.value,
-        userId: userId,                
-        boardId: selectedBoard.value || null
+        userId: userId,
+        boardId: selectedBoardId.value || null
     })
     const data = res.data
 
@@ -122,6 +120,21 @@ async function getSTSKey() {
             })
         }
     })
+}
+
+async function getBoards() {
+    const user = JSON.parse(localStorage.getItem('user') || '{}')
+    const userId = user?.userId ?? null
+    const res = await axios.get('/iapi/api/board/get', {
+        params: {
+            userId: userId
+        }
+    })
+    boards.value = res.data
 
 }
+
+onMounted(() => {
+    getBoards()
+})
 </script>

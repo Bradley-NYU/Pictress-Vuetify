@@ -1,5 +1,5 @@
 <template>
-    <v-container class="py-8">
+    <v-container class="pl-12">
         <!-- page title -->
         <h2 class="text-h4 font-weight-bold mb-6">Friends</h2>
 
@@ -71,7 +71,7 @@ import axios from '@/plugins/axios'
 const tab = ref('friends')
 const friends = ref([])
 const requests = ref([])
-const addUserId = ref('')          // ⇦ 输入框绑定
+const addUserId = ref('')         
 const snackbar = ref({ visible: false, text: '', color: 'green' })
 
 const user = JSON.parse(localStorage.getItem('user') || '{}')
@@ -101,7 +101,6 @@ async function loadRequests() {
     } catch (e) { console.error(e) }
 }
 
-/* ------- 1. 发送好友请求 ------- */
 async function sendFriendRequest() {
     try {
         await axios.post('/iapi/api/user/request', {
@@ -115,7 +114,6 @@ async function sendFriendRequest() {
     }
 }
 
-/* ------- 2. 接受 / 拒绝请求 ------- */
 async function answerRequest(requesterId, accept) {
     try {
         await axios.post('/iapi/api/user/answer', {
@@ -136,5 +134,4 @@ async function answerRequest(requesterId, accept) {
 </script>
 
 <style scoped>
-/* 需要时自行添加样式 */
 </style>

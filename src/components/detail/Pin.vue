@@ -2,22 +2,17 @@
 <template>
     <v-container class="py-8">
         <v-row>
-            <!-- 左侧大图 -->
             <v-col cols="12" md="8">
                 <v-card flat rounded="lg" class="overflow-hidden">
                     <v-img :src="'https://' + detail.pictureUrl" height="600px" cover></v-img>
                 </v-card>
             </v-col>
 
-            <!-- 右侧信息区 -->
             <v-col cols="12" md="4" class="d-flex flex-column">
-                <!-- 操作按钮 -->
                 <div class="d-flex align-center justify-space-between mb-4">
-                    <v-btn :color="detail.isOriginal ? 'grey-lighten-1' : 'pink'" size="large" rounded="lg"
-                        class="pin-btn-text me-4" :disabled="detail.isOriginal" @click="handleRepin">
+                    <v-btn :color="'pink'" size="large" rounded="lg" class="pin-btn-text me-4" @click="handleRepin">
                         {{ pinBtnText }}
                     </v-btn>
-                    <!-- 右：其它操作放一起 -->
                     <div class="d-flex align-center">
                         <v-btn icon @click="toggleLike">
                             <v-icon>{{ detail.isLikedByMe ? 'mdi-heart' : 'mdi-heart-outline' }}</v-icon>
@@ -29,8 +24,12 @@
                     </div>
                 </div>
 
-                <!-- 标题&描述 -->
-                <h2 class="text-h4 mb-2">{{ detail.title || 'Untitled Pin' }}</h2>
+                <p class="text-subtitle-1 text-grey-darken-1 d-flex align-center" v-if="detail.isOriginal">
+                    Post by Myself
+                    <v-icon class="ms-2" size="18">mdi-medal</v-icon>
+                </p>
+
+                <h2 class="text-h4 mb-3 mt-3">{{ detail.title || 'Untitled Pin' }}</h2>
                 <p class="text-subtitle-2 text-grey-darken-1">
                     {{ detail.description || 'No description.' }}
                 </p>
@@ -42,24 +41,51 @@
                     </v-chip>
                 </div>
 
-                <!-- 作者信息 -->
                 <div class="d-flex align-center mt-8">
                     <v-avatar size="48" class="me-3">
-                        <!-- 若后端未返回头像，可用占位图 -->
                         <v-img :src="authorAvatar" />
                     </v-avatar>
                     <div>
                         <div class="font-weight-medium">{{ detail.userName }}</div>
                     </div>
                 </div>
+
+                <v-card class="mt-6 pa-3" flat outlined rounded="lg">
+                    <h3 class="text-subtitle-1 mb-2">评论</h3>
+
+                    <!-- 评论列表 -->
+                    <div style="max-height: 200px; overflow-y: auto;">
+                        <v-list density="compact">
+                            <v-list-item v-for="c in comments" :key="c.timestamp + c.userId">
+                                <v-list-item-content>
+                                    <v-list-item-title class="text-body-2 font-weight-medium">
+                                        {{ c.userName }}
+                                        <span class="text-caption text-grey-darken-1 ms-2">{{ formatTime(c.timestamp)
+                                            }}</span>
+                                    </v-list-item-title>
+                                    <v-list-item-subtitle class="text-body-2">
+                                        {{ c.content }}
+                                    </v-list-item-subtitle>
+                                </v-list-item-content>
+                            </v-list-item>
+                        </v-list>
+                    </div>
+
+                    <!-- 评论输入框 -->
+                    <div class="d-flex align-center mt-3">
+                        <v-text-field v-model="newComment" placeholder="写下你的评论..." variant="solo" hide-details
+                            density="compact" class="me-2" style="flex: 1" @keyup.enter="submitComment" />
+                        <v-btn color="primary" :disabled="!newComment.trim()" @click="submitComment">发送</v-btn>
+                    </div>
+                </v-card>
             </v-col>
+
         </v-row>
 
-        <!-- 加载失败提示 -->
+
+
         <v-alert v-if="loadError" type="error" variant="tonal" class="mt-6" text="Failed to load pin detail." />
 
-
-        <!-- 选择图板弹窗 -->
         <v-dialog v-model="dialog" max-width="400">
             <v-card>
                 <v-card-title class="text-h6">Save Pin to Board</v-card-title>
@@ -113,11 +139,17 @@ const boards = ref([])
 const boardsLoading = ref(false)
 const selectedBoardId = ref(null)
 const pinBtnText = computed(() => {
-    if (detail.value.isOriginal) return 'Posted by me'
-    return detail.value.isPinedByMe ? 'Pined' : 'Pin'
+    return detail.value.isPinedByMe ? 'Pinged' : 'Pin'
 })
 
-onMounted(fetchDetail)
+const comments = ref([])
+const newComment = ref('')
+const defaultAvatar = 'https://cdn.vuetifyjs.com/images/profiles/default-avatar.png'
+
+onMounted(() => {
+    fetchDetail()
+    fetchComments()
+})
 
 async function fetchDetail() {
     try {
@@ -153,7 +185,6 @@ async function fetchBoards() {
 }
 
 function handleRepin() {
-    if (detail.value.isOriginal) return
     if (detail.value.isPinedByMe) {
         confirmRemoveRepin()
     } else {
@@ -182,21 +213,18 @@ async function confirmRemoveRepin() {
     try {
         await axios.post('/iapi/api/pin/removeRepin', {
             userId: userId,
-            originalPinId: pinId,
+            pinId: pinId,
         })
         dialog.value = false
-        // 更新本地状态，让按钮显示「Pined」
-        fetchDetail();
+        window.history.back();
     } catch (e) {
         console.error('repin error', e)
     }
 }
 
-/* 占位头像（可换成用户表里的头像字段） */
 const authorAvatar =
     'https://cdn.vuetifyjs.com/images/profiles/marcus.jpg'
 
-/* 点赞切换示例——这里只做本地状态演示 */
 async function toggleLike() {
     if (detail.value.isLikedByMe) {
         removelike();
@@ -228,18 +256,53 @@ async function removelike() {
 
     }
 }
+
+async function fetchComments() {
+    try {
+        const res = await axios.get('/iapi/api/pin/comment/get', {
+            params: {
+                pinId,
+            }
+        })
+        comments.value = res.data
+    } catch (e) {
+        console.error('fetchComments error', e)
+    }
+}
+
+async function submitComment() {
+    if (!newComment.value.trim()) return
+    try {
+        await axios.post('/iapi/api/pin/comment/add', {
+            userId: userId,
+            pinId: detail.value.pinId,
+            content: newComment.value.trim()
+        })
+        newComment.value = ''
+        fetchComments()
+    } catch (e) {
+        console.error('submitComment error', e)
+    }
+}
+
+function formatTime(ms) {
+    const d = new Date(ms)
+    const yyyy = d.getFullYear()
+    const mm = String(d.getMonth() + 1).padStart(2, '0')
+    const dd = String(d.getDate()).padStart(2, '0')
+    const hh = String(d.getHours()).padStart(2, '0')
+    const mi = String(d.getMinutes()).padStart(2, '0')
+    return `${yyyy}/${mm}/${dd} ${hh}:${mi}`
+}
 </script>
 
 <style scoped>
-/* 让图片区域始终铺满左列 */
 .v-card>.v-img {
     object-position: center;
 }
 
 .pin-btn-text {
     font-size: 1.0rem;
-    /* 更大的字号 */
     padding: 0.5rem 1.4rem;
-    /* 加宽内边距，视觉更大 */
 }
 </style>

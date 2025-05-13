@@ -25,12 +25,12 @@ onMounted(async () => {
 })
 
 function goBoard(id: number) {
-    router.push(`/board/${id}`)      // auto-routes: pages/board/[id].vue
+    router.push(`/board/${id}`)      
 }
 </script>
 
 <template>
-    <v-container class="py-8">
+    <v-container class="pl-12">
         <h2 class="text-h4 font-weight-bold mb-6">All Boards</h2>
 
         <v-row dense>
