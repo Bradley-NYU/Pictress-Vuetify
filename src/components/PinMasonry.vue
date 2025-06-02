@@ -28,8 +28,7 @@ const props = defineProps({
 
 
 
-const itemHeight = (index) => `${200 + (index % 5) * 40}px`
-
+const itemHeight = () => `${200 + Math.floor(Math.random() * 150)}px`
 
 function handleCardClick(pinId) {
     router.push(`/pin/${pinId}`)
